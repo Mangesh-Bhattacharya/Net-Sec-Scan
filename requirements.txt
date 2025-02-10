@@ -1,3 +1,5 @@
 scapy==2.5.0
 ipinfo==3.3.0
 tkinter==8.6.10
+folium==0.19.4
+Pillow==11.1.0

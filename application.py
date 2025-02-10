@@ -1,25 +1,32 @@
 import tkinter as tk
-from tkinter import messagebox, simpledialog, Listbox, Scrollbar
+from tkinter import messagebox, simpledialog, scrolledtext
 import socket
 import ipinfo
 import webbrowser
 from threading import Thread
-import time
+import os
+from datetime import datetime
+from scapy.all import sniff, DHCP, Ether
+from net_scan import scan_ports  # Import the scan_ports function from net_scan.py
+from tkinter import ttk
 
 
 class NetworkScannerApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Network Scanner App")
-        self.root.geometry("400x400")
+        self.root.geometry("600x600")
 
         self.verbose = False  # Verbose mode is disabled by default
-
         self.create_widgets()
+        self.setup_logging()
 
     def create_widgets(self):
         label = tk.Label(self.root, text="Select an action:")
         label.pack(pady=10)
+
+        self.log_display = scrolledtext.ScrolledText(self.root, height=10)
+        self.log_display.pack(pady=10)
 
         port_scan_button = tk.Button(
             self.root, text="1- Port Scan", command=self.port_scan)
@@ -37,112 +44,169 @@ class NetworkScannerApp:
             self.root, text="Verbose Mode", command=self.toggle_verbose)
         verbose_button.pack(pady=10)
 
+        # Progress bar for scanning
+        self.progress_bar = ttk.Progressbar(
+            self.root, orient="horizontal", length=400, mode="determinate")
+        self.progress_bar.pack(pady=10)
+
+    def setup_logging(self):
+        if not os.path.exists("logs"):
+            os.makedirs("logs")
+        self.log_file = os.path.join("logs", "network_scan.log")
+
+    def log(self, message):
+        with open(self.log_file, "a") as f:
+            f.write(message + "\n")
+        self.log_display.insert(tk.END, message + "\n")
+        self.log_display.see(tk.END)
+
     def toggle_verbose(self):
-        # Toggle the verbose flag when the checkbox is checked or unchecked
         self.verbose = not self.verbose
 
     def port_scan(self):
         host = simpledialog.askstring("Input", "Enter the host to scan:")
 
-        # Predefined common ports for scanning
-        common_ports = [
-            20, 21, 22, 23, 25, 53, 80, 110, 143, 443, 8080, 3306, 5432, 6379, 11211, 27017, 3389, 8081
+        port_selection_window = tk.Toplevel(self.root)
+        port_selection_window.title("Select Ports")
+
+        port_list = [
+            (20, "FTP Data"), (21, "FTP Control"), (22, "SSH"), (23, "Telnet"),
+            (25, "SMTP"), (53, "DNS"), (80, "HTTP"), (110, "POP3"),
+            (143, "IMAP"), (443, "HTTPS"), (3306, "MySQL"), (5432, "PostgreSQL"),
+            (6379, "Redis"), (11211, "Memcached"), (27017, "MongoDB"), (3389, "RDP"),
+            (21, "FTP"), (22, "SSH"), (25, "SMTP"), (53, "DNS"), (80, "HTTP"),
+            (443, "HTTPS"), (8080, "HTTP Alt"), (3306, "MySQL"), (5432, "PostgreSQL")
         ]
 
-        port_range = simpledialog.askstring(
-            "Input", "Enter a port number or range (e.g., 80-443, 22, 8080):")
-
         selected_ports = []
-        if port_range:
-            try:
-                if '-' in port_range:  # If range is specified, like 80-443
-                    start_port, end_port = map(int, port_range.split('-'))
-                    selected_ports = [p for p in range(
-                        start_port, end_port + 1)]
-                else:
-                    # If individual ports are selected, split by commas
-                    selected_ports = [int(p.strip())for p in port_range.split(',')]
-            except ValueError as e:
-                messagebox.showerror(
-                    "Invalid Input", f"Invalid port range or numbers: {str(e)}")
-                return
+        all_ports_selected = tk.BooleanVar()
 
-        # Show list of predefined common ports if no valid input was provided
-        if not selected_ports:
-            selected_ports = common_ports
+        def select_ports():
+            if all_ports_selected.get():
+                selected_ports.extend(range(1, 65536))  # Select all ports
+            else:
+                for i in range(len(port_list)):
+                    if port_checkboxes[i].get():
+                        selected_ports.append(port_list[i][0])
+            port_selection_window.destroy()
+            self.start_scan_thread(host, selected_ports)
 
-        result = self.scan_ports(host, selected_ports)
-        messagebox.showinfo("Scan Results", result)
+        port_checkboxes = []
+        select_all_checkbox = tk.Checkbutton(port_selection_window,
+                                             text="Select All Ports (1-65535)", variable=all_ports_selected)
+        select_all_checkbox.pack(anchor='w')
 
-    def scan_ports(self, host, ports):
+        for port, name in port_list:
+            var = tk.BooleanVar()
+            chk = tk.Checkbutton(port_selection_window,
+                                 text=f"{port} - {name}", variable=var)
+            chk.pack(anchor='w')
+            port_checkboxes.append(var)
+
+        submit_button = tk.Button(
+            port_selection_window, text="Start Scan", command=select_ports)
+        submit_button.pack()
+
+    def start_scan_thread(self, host, selected_ports):
+        # Reset progress bar
+        self.progress_bar['value'] = 0
+        self.progress_bar['maximum'] = len(selected_ports)
+
+        # Start the scan thread
+        scan_thread = Thread(target=self.run_scan, args=(host, selected_ports))
+        scan_thread.start()
+
+    def run_scan(self, host, selected_ports):
+        # Log the start time
+        start_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.log(f"Scan started at {start_time}")
+        self.log(f"Scanning host: {host}")
+        self.update_gui(f"Scan started at {start_time}")
+
         open_ports = []
-
-        if self.verbose:
-            print(f"Scanning ports for host: {host}")
-            print(f"Ports to scan: {ports}")
-
-        for port in ports:
+        for i, port in enumerate(selected_ports):
             try:
                 s = socket.socket()
                 s.connect((host, port))
                 open_ports.append((port, "Open"))
                 if self.verbose:
-                    print(f"Port {port} is Open")
-            except:
+                    verbose_message = f"Scanning port {port}... Open"
+                    self.log(verbose_message)
+                    # Show verbose message in GUI
+                    self.update_gui(verbose_message)
+            except Exception as e:
                 open_ports.append((port, "Closed"))
                 if self.verbose:
-                    print(f"Port {port} is Closed")
+                    verbose_message = f"Scanning port {port}... Closed"
+                    self.log(verbose_message)
+                    # Show verbose message in GUI
+                    self.update_gui(verbose_message)
             finally:
                 s.close()
 
+            # Update progress bar
+            self.progress_bar['value'] = i + 1
+            self.root.update_idletasks()  # Update the UI
+
+        # Log the end time
+        end_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.log(f"Scan ended at {end_time}")
+        self.update_gui(f"Scan ended at {end_time}")
+
+        # Show the results
         result = "Scan Results:\n"
         for port, status in open_ports:
             result += f"Port {port}: {status}\n"
 
-        return result
+        messagebox.showinfo("Scan Results", result)
+        self.log(result)
+
+    def update_gui(self, message):
+        self.log_display.insert(tk.END, message + "\n")
+        self.log_display.see(tk.END)
 
     def geo_locate(self):
         geotarget = simpledialog.askstring(
             "Input", "What IP would you like to geolocate?")
-
-        # Get geolocation details
-        access_token = '58a0d309242449'  # Replace with your access token
+        access_token = '58a0d309242449'
         handler = ipinfo.getHandler(access_token)
         details = handler.getDetails(geotarget)
 
-        # Extract latitude and longitude
-        latitude = details.loc.split(',')[0]
-        longitude = details.loc.split(',')[1]
-
-        # Display result
-        result = f"Geolocation for IP {geotarget}:\n"
-        result += f"Location: {details.city}, {details.region}, {details.country}\n"
-        result += f"Coordinates: {latitude}, {longitude}"
+        if hasattr(details, 'loc') and details.loc:
+            latitude, longitude = details.loc.split(',')
+            result = f"Geolocation for IP {geotarget}:\n"
+            result += f"Location: {details.city}, {details.region}, {details.country}\n"
+            result += f"Coordinates: {latitude}, {longitude}"
+            webbrowser.open(
+                f"https://www.google.com/maps?q={latitude},{longitude}")
+        else:
+            result = f"No location data available for IP {geotarget}."
 
         messagebox.showinfo("Geolocation Results", result)
-
-        if self.verbose:
-            print(f"Geolocating IP: {geotarget}")
-            print(f"Latitude: {latitude}, Longitude: {longitude}")
-
-        # Open Google Maps with the coordinates
-        google_maps_url = f"https://www.google.com/maps?q={latitude},{longitude}"
-        webbrowser.open(google_maps_url)
+        self.log(result)
 
     def dhcp_listener(self):
         self.waiting_window = tk.Toplevel(self.root)
-        self.waiting_window.title("Please wait...")
-        label = tk.Label(self.waiting_window, text="Listening for DHCP requests. Please wait...")
+        self.waiting_window.title("DHCP Listener")
+        label = tk.Label(self.waiting_window, text="Listening for DHCP requests...")
         label.pack(pady=10)
 
-        def show_dhcp_result(result):
-            if self.verbose:
-                print("DHCP request detected:", result)
-            self.waiting_window.destroy()
-            messagebox.showinfo("DHCP Listener Results", result)
+        def process_packet(packet):
+            if packet.haslayer(DHCP):
+                mac = packet[Ether].src
+                options = packet[DHCP].options
+                requested_ip = next(
+                    (item[1] for item in options if item[0] == "requested_addr"), "Unknown")
+                hostname = next(
+                    (item[1].decode() for item in options if item[0] == "hostname"), "Unknown")
+                vendor_id = next(
+                    (item[1].decode() for item in options if item[0] == "vendor_class_id"), "Unknown")
+                result = f"DHCP Request: {mac} - {hostname} / {vendor_id} requested {requested_ip}"
+                self.log(result)
 
-        # This method would use the listener function you've defined elsewhere (e.g., listen_dhcp_packets)
-        listen_dhcp_packets(show_dhcp_result)
+        dhcp_thread = Thread(target=lambda: sniff(
+            filter='udp and (port 67 or port 68)', prn=process_packet))
+        dhcp_thread.start()
 
 
 if __name__ == "__main__":
