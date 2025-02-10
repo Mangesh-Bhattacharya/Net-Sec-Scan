@@ -65,7 +65,7 @@ We expect all contributors to follow a secure coding standard and maintain a res
 ## 📚 Further Reading
 
 For more information about securing Python applications and best practices, you can explore the following resources:
-- [OWASP Secure Coding Practices](https://owasp.org/www-project-secure-coding/) 📖
-- [Python Security Guide](https://docs.python.org/3/library/security.html) 🧑‍💻
+- [OWASP Secure Coding Practices]([https://owasp.org/www-project-secure-coding/](https://owasp.org/projects/)) 📖
+- [Python for Cybersecurity](https://www.udemy.com/course/python-for-cyber/?utm_source=bing&utm_medium=udemyads&utm_campaign=BG-Search_DSA_Alpha_Prof_la.EN_cc.CA&campaigntype=Search&portfolio=Bing-Canada&language=EN&product=Course&test=&audience=DSA&topic=Python&priority=Alpha&utm_content=deal4584&utm_term=_._ag_1324913889842635_._ad__._kw_Python+en_._de_c_._dm__._pl__._ti_dat-2334606783753760%3Aloc-32_._li_124929_._pd__._&matchtype=b&msclkid=feca54a3ab671a5a4dfd3309c1135630&couponCode=2021PM20) 🧑‍💻
 
 ---
