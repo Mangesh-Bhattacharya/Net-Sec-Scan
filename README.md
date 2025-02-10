@@ -1,6 +1,6 @@
 # Network Scanner App 🖥️🔍
 
-A real-time **Network Scanner App** designed to provide powerful network analysis features like port scanning, geolocation lookup, and DHCP packet listening. Whether you are a **network administrator**, **security professional**, or **tech enthusiast**, this app helps you analyze and troubleshoot networks with ease. 
+A real-time **Network Scanner App** designed to provide powerful network analysis features like port scanning, geolocation lookup, and DHCP packet listening. Whether you are a **network administrator**, **security professional**, or **tech enthusiast**, this app helps you analyze and troubleshoot networks with ease.
 
 ## ✨ Features
 
@@ -29,31 +29,38 @@ A real-time **Network Scanner App** designed to provide powerful network analysi
 Make sure you have **Python 3.6** or higher installed on your machine. You will also need `pip` to install the necessary dependencies.
 
 1. **Clone the repository**:
+
    ```bash
    git clone https://github.com/Mangesh-Bhattacharya/Net-Sec-Scan.git
    ```
 
 2. **Navigate to the project directory**:
+
    ```bash
    cd Net-Sec-Scan
    ```
 
 3. **Create a virtual environment** (recommended):
+
    ```bash
    python -m venv env
    ```
 
 4. **Activate the virtual environment**:
    - **On Windows**:
+
      ```bash
      .\env\Scripts\activate
      ```
+
    - **On macOS/Linux**:
+
      ```bash
      source env/bin/activate
      ```
 
 5. **Install the required dependencies**:
+
    ```bash
    pip install -r requirements.txt
    ```
@@ -66,10 +73,13 @@ To use the **geolocation lookup** feature, you need an **API key** from [ipinfo.
 2. **Get your API access token** from your account dashboard.
 3. **Store the token as an environment variable**:
    - **On Windows**:
+
      ```bash
      set IPINFO_ACCESS_TOKEN=your-secure-token
      ```
+
    - **On macOS/Linux**:
+
      ```bash
      export IPINFO_ACCESS_TOKEN="your-secure-token"
      ```
@@ -155,6 +165,7 @@ For any inquiries, suggestions, or if you find a security vulnerability, please 
 ---
 
 Thank you for checking out the **Network Scanner App**! Happy scanning! 🔍
+
 ```
 
 ### Key Changes:
