@@ -13,7 +13,7 @@ If you find a security vulnerability or issue with the **Network Scanner App**, 
 ### How to report vulnerabilities:
 
 1. **Email**: Please send a detailed report of the security issue to [mangesh@ameyacloud.com] 📧
-2. **GitHub Issues**: You can create an issue on our repository's [GitHub Issues page](https://github.com/Net-Sec-Scan/issues), marking it with the label **security**. 🐛
+2. **GitHub Issues**: You can create an issue on our repository's [GitHub Issues page]([https://github.com/Net-Sec-Scan/issues](https://github.com/Mangesh-Bhattacharya/Net-Sec-Scan/issues)), marking it with the label **security**. 🐛
 
 Please provide as much detail as possible, including:
 - A description of the vulnerability 📝
