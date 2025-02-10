@@ -16,12 +16,12 @@ Make sure you have Python 3.6 or higher installed on your machine. You will also
 
 1. Clone the repository:
    ```bash
-   git clone [https://github.com/Net-Sec-Scan/Network-Scanner-App.git](https://github.com/Mangesh-Bhattacharya/Net-Sec-Scan.git)
+   git clone https://github.com/Mangesh-Bhattacharya/Net-Sec-Scan.git
    ```
 
 2. Navigate to the project directory:
    ```bash
-   cd Network-Scanner-App
+   cd Net-Sec-Scan
    ```
 
 3. Create a virtual environment (recommended):
