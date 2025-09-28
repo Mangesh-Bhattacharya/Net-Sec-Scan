@@ -6,7 +6,9 @@ import webbrowser
 from threading import Thread
 import os
 from datetime import datetime
-from scapy.all import sniff, DHCP, Ether
+from scapy.all import sniff
+from scapy.layers.l2 import Ether
+from scapy.layers.dhcp import DHCP
 from net_scan import scan_ports  # Import the scan_ports function from net_scan.py
 from tkinter import ttk
 
@@ -125,6 +127,7 @@ class NetworkScannerApp:
 
         open_ports = []
         for i, port in enumerate(selected_ports):
+            s = None
             try:
                 s = socket.socket()
                 s.connect((host, port))
@@ -142,7 +145,8 @@ class NetworkScannerApp:
                     # Show verbose message in GUI
                     self.update_gui(verbose_message)
             finally:
-                s.close()
+                if s is not None:
+                    s.close()
 
             # Update progress bar
             self.progress_bar['value'] = i + 1
