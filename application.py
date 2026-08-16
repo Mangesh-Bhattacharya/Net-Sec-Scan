@@ -63,10 +63,8 @@ class NetworkScannerApp:
         timestamp = time.strftime("[%Y-%m-%d %H:%M:%S]")
         entry = f"{timestamp} {message}"
         with open(self.log_file, "a") as f:
-            f.write(entry + "
-")
-        self.log_display.insert(tk.END, entry + "
-")
+            f.write(entry + "\n")
+        self.log_display.insert(tk.END, entry + "\n")
         self.log_display.see(tk.END)
 
     def toggle_verbose(self):
@@ -160,17 +158,22 @@ class NetworkScannerApp:
                 except Exception:
                     pass
 
-        result = "Scan Results:
-"
+        result = "Scan Results:\n"
         for port, status in open_ports:
-            result += f"Port {port}: {status}
-"
+            result += f"Port {port}: {status}\n"
 
         return result
 
     def geo_locate(self):
         geotarget = simpledialog.askstring("Input", "What IP would you like to geolocate?")
-        access_token = '58a0d309242449'
+        access_token = os.environ.get("IPINFO_ACCESS_TOKEN")
+        if not access_token:
+            messagebox.showerror(
+                'Missing configuration',
+                'Set the IPINFO_ACCESS_TOKEN environment variable to use geolocation '
+                '(see README for setup instructions).',
+            )
+            return
         handler = ipinfo.getHandler(access_token)
         try:
             details = handler.getDetails(geotarget)
@@ -183,10 +186,11 @@ class NetworkScannerApp:
         loc = getattr(details, 'loc', None)
         if loc:
             latitude, longitude = loc.split(',')
-            result = f"Geolocation for IP {geotarget}:
-"
-            result += f"Location: {getattr(details, 'city', 'N/A')}, {getattr(details, 'region', 'N/A')}, {getattr(details, 'country', 'N/A')}
-"
+            result = f"Geolocation for IP {geotarget}:\n"
+            result += (
+                f"Location: {getattr(details, 'city', 'N/A')}, "
+                f"{getattr(details, 'region', 'N/A')}, {getattr(details, 'country', 'N/A')}\n"
+            )
             result += f"Coordinates: {latitude}, {longitude}"
             webbrowser.open(f"https://www.google.com/maps?q={latitude},{longitude}")
         else:
@@ -240,9 +244,6 @@ class NetworkScannerApp:
 
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = NetworkScannerApp(root)
-    root.mainloop()
     root = tk.Tk()
     app = NetworkScannerApp(root)
     root.mainloop()

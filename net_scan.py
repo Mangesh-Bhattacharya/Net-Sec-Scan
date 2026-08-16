@@ -1,3 +1,4 @@
+import os
 import socket
 import time
 from scapy.all import Ether, DHCP, sniff
@@ -44,7 +45,12 @@ def get_service_info(port):
 
 
 def geo_locate(geotarget):
-    access_token = '58a0d309242449'
+    access_token = os.environ.get("IPINFO_ACCESS_TOKEN")
+    if not access_token:
+        raise RuntimeError(
+            "Set the IPINFO_ACCESS_TOKEN environment variable to use geolocation "
+            "(see README for setup instructions)."
+        )
     handler = ipinfo.getHandler(access_token)
     details = handler.getDetails(geotarget)
 
